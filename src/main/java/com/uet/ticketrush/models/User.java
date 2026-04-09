@@ -1,18 +1,33 @@
 package com.uet.ticketrush.models;
 
-import jakarta.persistence.Entity;
-import jakarta.persistence.GeneratedValue;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
-import lombok.Data;
+import jakarta.persistence.*;
+import lombok.*;
+import java.util.UUID;
 
-@Data
 @Entity
-@Table(name="users")
+@Table(name = "users")
+@Getter @Setter
+@NoArgsConstructor @AllArgsConstructor
+@Builder
 public class User {
     @Id
-    @GeneratedValue
-    private Long id;
+    @GeneratedValue(strategy = GenerationType.UUID)
+    @Column(name = "user_id", updatable = false, nullable = false)
+    private UUID userId;
+
+    @Column(name ="email", nullable = false, unique = true)
     private String username;
+
+    @Column(name = "password_hash", nullable = false)
     private String password;
+
+    private Integer age;
+
+    @Column(name = "display_name")
+    private String displayName;
+
+    private String gender;
+
+    @Column(name = "avatar_url")
+    private String avatarUrl;
 }
