@@ -12,6 +12,7 @@ import org.springframework.security.authentication.UsernamePasswordAuthenticatio
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 
@@ -22,6 +23,9 @@ public class UserService {
 
     @Autowired
     private JwtService jwtService;
+
+    @Autowired
+    private CloudinaryService cloudinaryService;
 
     @Autowired
     private AuthenticationManager authManager;
@@ -66,5 +70,27 @@ public class UserService {
         User user = userRepository.findByUsername(username);
         user.updateProfile(dto.displayName(), dto.age(), dto.gender());
         return userRepository.save(user);
+    }
+
+    public String updateProfileAvatar(String username, MultipartFile file) {
+        // 1. Kiểm tra file có phải ảnh không
+        cloudinaryService.validateImage(file);
+
+        // 2. Lấy user hiện tại
+        User user = userRepository.findByUsername(username);
+
+        // 3. Xóa ảnh old trên cloud (Nếu có)
+        if (user.getAvatarUrl() != null) {
+            cloudinaryService.deleteImage(user.getAvatarUrl());
+        }
+
+        // 4. Upload ảnh mới
+        String newUrl = cloudinaryService.uploadAvatar(file);
+
+        // 5. Lưu vào DB
+        user.setAvatarUrl(newUrl);
+        userRepository.save(user);
+
+        return newUrl;
     }
 }

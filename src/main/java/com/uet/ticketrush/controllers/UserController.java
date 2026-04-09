@@ -7,8 +7,10 @@ import com.uet.ticketrush.services.UserService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
+import java.util.Map;
 
 @RestController
 public class UserController {
@@ -42,5 +44,12 @@ public class UserController {
         String currentUsername = "testuser@gmail.com"; //hardcoded
         UserInformationResponseDTO dto = userService.getDataByUsername(currentUsername);
         return ResponseEntity.ok(dto);
+    }
+
+    @PostMapping("/users/me/avatar")
+    public ResponseEntity<?> updateAvatar(@RequestParam("file")MultipartFile file) {
+        String currentUsername = "testuser@gmail.com"; //hardcoded
+        String newUrl = userService.updateProfileAvatar(currentUsername, file);
+        return ResponseEntity.ok(Map.of("url", newUrl));
     }
 }
