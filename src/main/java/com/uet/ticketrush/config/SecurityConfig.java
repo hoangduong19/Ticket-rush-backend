@@ -36,7 +36,7 @@ public class SecurityConfig {
                 .csrf(customizer -> customizer.disable())
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/register", "/login", "/admin/events/**")
+                        .requestMatchers("/register", "/login", "/admin/events/**", "/users/me")
                         .permitAll()
                         .anyRequest().authenticated())
 //                .formLogin(Customizer.withDefaults())

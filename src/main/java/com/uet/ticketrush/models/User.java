@@ -1,5 +1,6 @@
 package com.uet.ticketrush.models;
 
+import com.uet.ticketrush.enums.Gender;
 import com.uet.ticketrush.exceptions.TicketRushException;
 import jakarta.persistence.*;
 import lombok.*;
@@ -29,12 +30,13 @@ public class User {
     @Column(name = "display_name")
     private String displayName;
 
-    private String gender;
+    @Enumerated(EnumType.STRING)
+    private Gender gender;
 
     @Column(name = "avatar_url")
     private String avatarUrl;
 
-    public void updateProfile(String newDisplayName, Integer newAge) {
+    public void updateProfile(String newDisplayName, Integer newAge, Gender gender) {
         if (newDisplayName != null) {
             if (newDisplayName.trim().length() < 2) {
                 throw new TicketRushException("Tên hiển thị phải có ít nhất 2 ký tự", HttpStatus.BAD_REQUEST);
@@ -48,5 +50,7 @@ public class User {
             }
             this.age = newAge;
         }
+
+        this.gender = gender;
     }
 }

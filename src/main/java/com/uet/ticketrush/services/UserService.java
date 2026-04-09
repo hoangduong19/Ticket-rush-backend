@@ -1,8 +1,12 @@
 package com.uet.ticketrush.services;
 
+import com.uet.ticketrush.dtos.UserInformationResponseDTO;
+import com.uet.ticketrush.dtos.UserUpdateProfileDTO;
+import com.uet.ticketrush.exceptions.TicketRushException;
 import com.uet.ticketrush.models.User;
 import com.uet.ticketrush.repos.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
@@ -47,5 +51,20 @@ public class UserService {
         }
 
         return "fail";
+    }
+
+    public UserInformationResponseDTO getDataByUsername(String username) {
+        User user = userRepository.findByUsername(username);
+        if (user == null) {
+            throw new TicketRushException("Không tìm thấy user: " + username, HttpStatus.NOT_FOUND); //404
+        }
+
+        return UserInformationResponseDTO.fromEntity(user);
+    }
+
+    public User updateProfile(String username, UserUpdateProfileDTO dto) {
+        User user = userRepository.findByUsername(username);
+        user.updateProfile(dto.displayName(), dto.age(), dto.gender());
+        return userRepository.save(user);
     }
 }
