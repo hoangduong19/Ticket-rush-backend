@@ -7,10 +7,23 @@ import com.uet.ticketrush.repos.EventRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
+import java.util.List;
+import java.util.UUID;
+
 @Service
 @RequiredArgsConstructor
 public class EventService {
     private final EventRepository eventRepository;
+
+    // Hàm lấy tất cả sự kiện
+    public List<Event> getAllEvents() {
+        return eventRepository.findAll();
+    }
+
+    public Event getEventById(UUID eventId) {
+        return eventRepository.findById(eventId)
+                .orElseThrow(() -> new RuntimeException("Không tìm thấy sự kiện với ID: " + eventId));
+    }
 
     public Event createEvent(EventRequestDTO dto) {
         Event event = Event.builder()

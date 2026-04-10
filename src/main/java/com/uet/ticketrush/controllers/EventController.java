@@ -6,22 +6,33 @@ import com.uet.ticketrush.services.EventService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.UUID;
 
 @RestController
 @RequiredArgsConstructor
-@RequestMapping("/admin/events")
+@RequestMapping
+@CrossOrigin(origins = "http://localhost:3000")
 public class EventController {
     private final EventService eventService;
 
-    @PostMapping
+    @PostMapping("/admin/events")
     public ResponseEntity<Event> createEvent(@RequestBody EventRequestDTO request) {
         Event newEvent = eventService.createEvent(request);
 
         return new ResponseEntity<>(newEvent, HttpStatus.CREATED);
+    }
+
+    // THÊM HÀM NÀY ĐỂ TRẢ VỀ DANH SÁCH SỰ KIỆN (Nhiệm vụ 1)
+    @GetMapping("/events")
+    public ResponseEntity<?> getAllEvents() {
+        return ResponseEntity.ok(eventService.getAllEvents());
+    }
+
+    @GetMapping("/events/{eventId}")
+    public ResponseEntity<Event> getEventById(@PathVariable UUID eventId) {
+        return ResponseEntity.ok(eventService.getEventById(eventId));
     }
 
 }
