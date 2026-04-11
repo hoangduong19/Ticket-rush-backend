@@ -1,6 +1,7 @@
 package com.uet.ticketrush.controllers;
 
 import com.uet.ticketrush.dtos.EventRequestDTO;
+import com.uet.ticketrush.dtos.SeatingPayloadDTO;
 import com.uet.ticketrush.models.Event;
 import com.uet.ticketrush.services.EventService;
 import lombok.RequiredArgsConstructor;
@@ -35,4 +36,9 @@ public class EventController {
         return ResponseEntity.ok(eventService.getEventById(eventId));
     }
 
+    @PostMapping("/events/{eventId}/seats")
+    public ResponseEntity<String> setupSeats(@PathVariable UUID eventId, @RequestBody SeatingPayloadDTO payload) {
+        eventService.generateSeatsFromConfig(eventId, payload);
+        return ResponseEntity.ok("Đã tạo ma trận ghế thành công!");
+    }
 }

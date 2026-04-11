@@ -1,12 +1,21 @@
 package com.uet.ticketrush.services;
 
 import com.uet.ticketrush.dtos.EventRequestDTO;
+import com.uet.ticketrush.dtos.RowConfigDTO;
+import com.uet.ticketrush.dtos.SeatingPayloadDTO;
 import com.uet.ticketrush.enums.EventStatus;
+import com.uet.ticketrush.enums.SeatStatus;
+import com.uet.ticketrush.exceptions.TicketRushException;
 import com.uet.ticketrush.models.Event;
+import com.uet.ticketrush.models.Seat;
 import com.uet.ticketrush.repos.EventRepository;
+import com.uet.ticketrush.repos.SeatRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
 
@@ -14,6 +23,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class EventService {
     private final EventRepository eventRepository;
+    private final SeatRepository seatRepository;
 
     // Hàm lấy tất cả sự kiện
     public List<Event> getAllEvents() {
@@ -39,4 +49,31 @@ public class EventService {
         return eventRepository.save(event);
     }
 
+    // Trong EventService.java
+    @Transactional
+    public void generateSeatsFromConfig(UUID eventId, SeatingPayloadDTO payload) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new TicketRushException("Sự kiện không tồn tại", HttpStatus.NOT_FOUND));
+
+        List<Seat> allSeats = new ArrayList<>();
+
+        // Duyệt qua từng cấu hình hàng (RowConfig) mà Frontend gửi lên
+        for (RowConfigDTO rowConfig : payload.getRowConfigs()) {
+            // Với mỗi hàng, tạo số lượng ghế tương ứng (seatsPerRow)
+            for (int s = 1; s <= payload.getSeatsPerRow(); s++) {
+                Seat seat = Seat.builder()
+                        .event(event)
+                        .sectionName(payload.getSectionLabel()) // Tên khu vực (VIP, Thường...)
+                        .rowNumber(rowConfig.getRowNumber())    // Số hàng
+                        .seatNumber(s)                          // Số ghế
+                        .price(rowConfig.getPrice())            // Giá tiền của hàng đó
+                        .status(SeatStatus.Available)
+                        .seatType("Standard")
+                        .version(0)
+                        .build();
+                allSeats.add(seat);
+            }
+        }
+        seatRepository.saveAll(allSeats);
+    }
 }
