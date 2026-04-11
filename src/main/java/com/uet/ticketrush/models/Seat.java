@@ -3,6 +3,7 @@ package com.uet.ticketrush.models;
 import com.uet.ticketrush.enums.SeatStatus;
 import jakarta.persistence.*;
 import lombok.*;
+
 import java.math.BigDecimal;
 import java.util.UUID;
 
@@ -42,8 +43,22 @@ public class Seat {
     @Column(nullable = false)
     private SeatStatus status;
 
-
     @Version
     @Column(nullable = false)
     private Integer version;
+
+    public boolean isAvailable() {
+        return this.status == SeatStatus.Available;
+    }
+//
+//    public void release() {
+//        this.status = SeatStatus.Available;
+//    }
+//
+//    public void lock() {
+//        if (!isAvailable()) {
+//            throw new TicketRushException("Ghế " + seatNumber + " không khả dụng để khóa!", HttpStatus.CONFLICT);
+//        }
+//        this.status = SeatStatus.Locked;
+//    }
 }
