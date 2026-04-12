@@ -36,7 +36,7 @@ public class SecurityConfig {
                 .csrf(customizer -> customizer.disable())
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/register", "/login", "/admin/events/**", "/users/me/**", "/swagger-ui/**", "/v3/api-docs/**", "/events/**", "/seats/**")
+                        .requestMatchers("/register", "/login", "/admin/events/**", "/users/me/**", "/swagger-ui/**", "/v3/api-docs/**", "/events/**", "/seats/**", "/queue/**")
                         .permitAll()
                         .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated())
