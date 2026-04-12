@@ -8,9 +8,11 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.orm.ObjectOptimisticLockingFailureException;
+import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.servlet.NoHandlerFoundException;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -84,6 +86,38 @@ public class GlobalExceptionHandler {
                 System.currentTimeMillis()
         );
         return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    /**
+     * Hứng lỗi 404 - Khi Frontend gọi sai đường dẫn (URL không tồn tại)
+     */
+    @ExceptionHandler(NoHandlerFoundException.class)
+    public ResponseEntity<ErrorResponseDTO> handleNoHandlerFound(NoHandlerFoundException ex) {
+        String message = String.format("API không tồn tại: %s %s. Vui lòng kiểm tra lại đường dẫn!",
+                ex.getHttpMethod(), ex.getRequestURL());
+
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                HttpStatus.NOT_FOUND.value(),
+                message,
+                System.currentTimeMillis()
+        );
+        return ResponseEntity.status(HttpStatus.NOT_FOUND).body(error);
+    }
+
+    /**
+     * Hứng lỗi 405 - Khi Frontend gọi đúng URL nhưng sai Method (VD: API cần POST nhưng gọi GET)
+     */
+    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<ErrorResponseDTO> handleMethodNotSupported(HttpRequestMethodNotSupportedException ex) {
+        String message = String.format("Phương thức %s không được hỗ trợ cho API này. Thử lại với: %s",
+                ex.getMethod(), ex.getSupportedHttpMethods());
+
+        ErrorResponseDTO error = new ErrorResponseDTO(
+                HttpStatus.METHOD_NOT_ALLOWED.value(),
+                message,
+                System.currentTimeMillis()
+        );
+        return ResponseEntity.status(HttpStatus.METHOD_NOT_ALLOWED).body(error);
     }
 
     @ExceptionHandler(Exception.class)
