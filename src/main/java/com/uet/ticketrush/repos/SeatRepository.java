@@ -21,4 +21,6 @@ public interface SeatRepository extends JpaRepository<Seat, UUID> {
             @Param("targetStatus") SeatStatus targetStatus,
             @Param("requiredStatus") SeatStatus requiredStatus
     );
+
+    List<Seat> findByEvent_EventId(UUID eventId);
 }

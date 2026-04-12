@@ -2,6 +2,7 @@ package com.uet.ticketrush.services;
 
 import com.uet.ticketrush.enums.SeatStatus;
 import com.uet.ticketrush.exceptions.TicketRushException;
+import com.uet.ticketrush.models.Event;
 import com.uet.ticketrush.models.Seat;
 import com.uet.ticketrush.repos.SeatRepository;
 import lombok.RequiredArgsConstructor;
@@ -15,6 +16,17 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class SeatService {
     private final SeatRepository seatRepository;
+
+    public List<Seat> getSeatsByEventId(UUID eventId) {
+        List<Seat> seats = seatRepository.findByEvent_EventId(eventId);
+
+        if (seats.isEmpty()) {
+            throw new RuntimeException("Không tìm thấy seat cho event ID: " + eventId);
+        }
+
+        return seats;
+    }
+
     public void lockSeats(List<UUID> seatIds) {
         int updated = seatRepository.updateStatusForSeats(seatIds, SeatStatus.Locked, SeatStatus.Available);
 

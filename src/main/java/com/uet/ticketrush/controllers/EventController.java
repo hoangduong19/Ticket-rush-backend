@@ -4,6 +4,7 @@ import com.uet.ticketrush.dtos.EventRequestDTO;
 import com.uet.ticketrush.dtos.SeatingPayloadDTO;
 import com.uet.ticketrush.models.Event;
 import com.uet.ticketrush.services.EventService;
+import com.uet.ticketrush.services.SeatService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -17,6 +18,8 @@ import java.util.UUID;
 @CrossOrigin(origins = "http://localhost:3000")
 public class EventController {
     private final EventService eventService;
+
+    private final SeatService seatService;
 
     @PostMapping("/admin/events")
     public ResponseEntity<Event> createEvent(@RequestBody EventRequestDTO request) {
@@ -34,6 +37,11 @@ public class EventController {
     @GetMapping("/events/{eventId}")
     public ResponseEntity<Event> getEventById(@PathVariable UUID eventId) {
         return ResponseEntity.ok(eventService.getEventById(eventId));
+    }
+
+    @GetMapping("/events/{eventId}/seats")
+    public ResponseEntity<?> getSeatsByEventId(@PathVariable UUID eventId) {
+        return ResponseEntity.ok(seatService.getSeatsByEventId(eventId));
     }
 
     @PostMapping("/events/{eventId}/seats")
