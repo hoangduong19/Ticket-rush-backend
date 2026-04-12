@@ -5,6 +5,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
 
@@ -24,7 +26,18 @@ public class QueueController {
 
     @GetMapping("/status")
     public ResponseEntity<Map<String, Object>> getQueueStatus(@RequestParam UUID eventId, @RequestParam String userId) {
-        return ResponseEntity.ok(queueService.getQueueStatus(eventId, userId));
+        Map<String, Object> status = queueService.getQueueStatus(eventId, userId);
+
+        Map<String, Object> response = new HashMap<>(status);
+
+        // 2. Nếu đã ACTIVE, chỉ lấy thêm mốc expiresAt
+        if ("ACTIVE".equals(status.get("status"))) {
+            LocalDateTime expiry = queueService.validateAndGetSessionExpiry(eventId, UUID.fromString(userId));
+
+            response.put("expiresAt", expiry);
+        }
+
+        return ResponseEntity.ok(response);
     }
 
     @PostMapping("/complete")
