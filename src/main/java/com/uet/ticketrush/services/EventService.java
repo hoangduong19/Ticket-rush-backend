@@ -68,7 +68,7 @@ public class EventService {
                         .seatNumber(s)                          // Số ghế
                         .price(rowConfig.getPrice())            // Giá tiền của hàng đó
                         .status(SeatStatus.Available)
-                        .seatType("Standard")
+                        .seatType(rowConfig.getSeatType())
                         .version(0)
                         .build();
                 allSeats.add(seat);

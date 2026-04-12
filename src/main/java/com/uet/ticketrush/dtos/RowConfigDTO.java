@@ -9,4 +9,5 @@ import java.math.BigDecimal;
 public class RowConfigDTO {
     private Integer rowNumber;
     private BigDecimal price;
+    private String seatType;
 }
