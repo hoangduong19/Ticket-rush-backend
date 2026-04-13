@@ -3,6 +3,7 @@ package com.uet.ticketrush.controllers;
 import com.uet.ticketrush.dtos.EventRequestDTO;
 import com.uet.ticketrush.dtos.SeatingPayloadDTO;
 import com.uet.ticketrush.models.Event;
+import com.uet.ticketrush.models.Seat;
 import com.uet.ticketrush.services.EventService;
 import com.uet.ticketrush.services.SeatService;
 import lombok.RequiredArgsConstructor;
@@ -10,6 +11,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
 import java.util.UUID;
 
 @RestController
@@ -48,5 +50,11 @@ public class EventController {
     public ResponseEntity<String> setupSeats(@PathVariable UUID eventId, @RequestBody SeatingPayloadDTO payload) {
         eventService.generateSeatsFromConfig(eventId, payload);
         return ResponseEntity.ok("Đã tạo ma trận ghế thành công!");
+    }
+
+    @GetMapping("/events/{eventId}/seats/status")
+    public ResponseEntity<List<Seat>> getSeatsStatus(@PathVariable UUID eventId) {
+        List<Seat> seats = eventService.getSeatsStatus(eventId);
+        return ResponseEntity.ok(seats);
     }
 }

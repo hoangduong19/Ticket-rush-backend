@@ -76,4 +76,8 @@ public class EventService {
         }
         seatRepository.saveAll(allSeats);
     }
+
+    public List<Seat> getSeatsStatus(UUID eventId) {
+        return seatRepository.findByEvent_EventId(eventId);
+    }
 }
