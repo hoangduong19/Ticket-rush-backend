@@ -2,11 +2,10 @@ package com.uet.ticketrush.services;
 
 import com.uet.ticketrush.dtos.BookingRequestDTO;
 import com.uet.ticketrush.dtos.SeatHoldResponseDTO;
+import com.uet.ticketrush.enums.HoldStatus;
 import com.uet.ticketrush.exceptions.TicketRushException;
-import com.uet.ticketrush.models.Event;
 import com.uet.ticketrush.models.Seat;
 import com.uet.ticketrush.models.SeatHold;
-import com.uet.ticketrush.models.User;
 import com.uet.ticketrush.repos.EventRepository;
 import com.uet.ticketrush.repos.SeatHoldRepository;
 import com.uet.ticketrush.repos.SeatRepository;
@@ -17,15 +16,18 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
 public class BookingFacade {
     private final SeatService seatService;
     private final VirtualQueueService virtualQueueService;
+    private final SeatHoldService holdService;
     private final SeatRepository seatRepository;
     private final SeatHoldRepository holdRepository;
     private final UserRepository userRepository;
@@ -35,15 +37,23 @@ public class BookingFacade {
     public UUID createReservation(BookingRequestDTO request) {
         LocalDateTime sessionExpiresAt = virtualQueueService.validateAndGetSessionExpiry(request.eventId(), request.userId());
 
-        seatService.lockSeats(request.seatIds());
+        Optional<SeatHold> existingHoldOpt = holdRepository.findByUser_UserIdAndEvent_EventIdAndStatus(
+                request.userId(), request.eventId(), HoldStatus.Active);
 
-        User user = userRepository.getReferenceById(request.userId());
-        Event event = eventRepository.getReferenceById(request.eventId());
-        List<Seat> seats = seatRepository.findAllById(request.seatIds());
+        if (existingHoldOpt.isPresent()) {
+            SeatHold existingHold = existingHoldOpt.get();
 
-        SeatHold hold = SeatHold.createPendingHold(user, event, new HashSet<>(seats), sessionExpiresAt);
+            List<UUID> trulyNewIds = filterNewSeats(existingHold, request.seatIds());
 
-        return holdRepository.save(hold).getHoldId();
+            if (!trulyNewIds.isEmpty()) {
+                seatService.lockSeats(trulyNewIds);
+                holdService.addSeatsToExistingHold(existingHold, trulyNewIds, sessionExpiresAt);
+            }
+            return existingHoldOpt.get().getHoldId();
+        } else {
+            seatService.lockSeats(request.seatIds());
+            return holdService.createHold(request.userId(), request.eventId(), request.seatIds(), sessionExpiresAt).getHoldId();
+        }
     }
 
     public SeatHoldResponseDTO getHoldDetails(UUID holdId) {
@@ -65,5 +75,15 @@ public class BookingFacade {
                 seatDTOs,
                 hold.getTotalPrice()
         );
+    }
+
+    private List<UUID> filterNewSeats(SeatHold hold, List<UUID> requestedIds) {
+        Set<UUID> currentIds = hold.getSeats().stream()
+                .map(Seat::getSeatId)
+                .collect(Collectors.toSet());
+
+        return requestedIds.stream()
+                .filter(id -> !currentIds.contains(id))
+                .toList();
     }
 }
