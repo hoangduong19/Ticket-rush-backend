@@ -16,6 +16,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
 import java.util.HashSet;
 import java.util.List;
 import java.util.UUID;
@@ -24,6 +25,7 @@ import java.util.UUID;
 @RequiredArgsConstructor
 public class BookingFacade {
     private final SeatService seatService;
+    private final VirtualQueueService virtualQueueService;
     private final SeatRepository seatRepository;
     private final SeatHoldRepository holdRepository;
     private final UserRepository userRepository;
@@ -31,13 +33,15 @@ public class BookingFacade {
 
     @Transactional
     public UUID createReservation(BookingRequestDTO request) {
+        LocalDateTime sessionExpiresAt = virtualQueueService.validateAndGetSessionExpiry(request.eventId(), request.userId());
+
         seatService.lockSeats(request.seatIds());
 
         User user = userRepository.getReferenceById(request.userId());
         Event event = eventRepository.getReferenceById(request.eventId());
         List<Seat> seats = seatRepository.findAllById(request.seatIds());
 
-        SeatHold hold = SeatHold.createPendingHold(user, event, new HashSet<>(seats), 10);
+        SeatHold hold = SeatHold.createPendingHold(user, event, new HashSet<>(seats), sessionExpiresAt);
 
         return holdRepository.save(hold).getHoldId();
     }

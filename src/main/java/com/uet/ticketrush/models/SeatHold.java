@@ -57,13 +57,13 @@ public class SeatHold {
         this.status = HoldStatus.Expired;
     }
 
-    public static SeatHold createPendingHold(User user, Event event, Set<Seat> seats, int expiryMinutes) {
+    public static SeatHold createPendingHold(User user, Event event, Set<Seat> seats, LocalDateTime expiresAt) {
         return SeatHold.builder()
                 .user(user)
                 .event(event)
                 .seats(seats)
                 .status(HoldStatus.Active)
-                .expiresAt(LocalDateTime.now().plusMinutes(expiryMinutes))
+                .expiresAt(expiresAt)
                 .build();
     }
 

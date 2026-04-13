@@ -1,14 +1,17 @@
 package com.uet.ticketrush.services;
 
+import com.uet.ticketrush.exceptions.TicketRushException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import java.util.UUID;
-import java.util.HashMap;
-import java.util.Map;
 import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.util.Map;
 import java.util.Set;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -17,6 +20,7 @@ public class VirtualQueueService {
     private final StringRedisTemplate redisTemplate;
     // Set to 50 concurrent users per requirement
     private static final int MAX_CONCURRENT_USERS = 50;
+    private static final long SESSION_DURATION_MS = 10 * 60 * 1000; // 10 phút
 
     public Map<String, Object> joinQueue(UUID eventId, String userId) {
         String activeKey = "event:" + eventId + ":active";
@@ -56,10 +60,10 @@ public class VirtualQueueService {
 
         // Refresh if active
         Double activeScore = redisTemplate.opsForZSet().score(activeKey, userId);
-        if (activeScore != null) {
-            redisTemplate.opsForZSet().add(activeKey, userId, Instant.now().toEpochMilli());
-            return Map.of("status", "ACTIVE");
-        }
+//        if (activeScore != null) {
+//            redisTemplate.opsForZSet().add(activeKey, userId, Instant.now().toEpochMilli());
+//            return Map.of("status", "ACTIVE");
+//        }
 
         // Process queue to check if we can promote users to active
         processQueue(eventId);
@@ -103,5 +107,25 @@ public class VirtualQueueService {
                 }
             }
         }
+    }
+
+    public LocalDateTime validateAndGetSessionExpiry(UUID eventId, UUID userId) {
+        String activeKey = "event:" + eventId + ":active";
+        Double startTimeScore = redisTemplate.opsForZSet().score(activeKey, userId.toString());
+
+        if (startTimeScore == null) {
+            throw new TicketRushException("Phiên làm việc không hợp lệ hoặc đã hết hạn", HttpStatus.FORBIDDEN);
+        }
+
+        long expirationMillis = startTimeScore.longValue() + SESSION_DURATION_MS;
+        LocalDateTime sessionExpiresAt = LocalDateTime.ofInstant(
+                Instant.ofEpochMilli(expirationMillis), ZoneId.systemDefault());
+
+        if (LocalDateTime.now().isAfter(sessionExpiresAt)) {
+            releaseSlot(eventId, userId.toString()); // Dùng luôn hàm có sẵn
+            throw new TicketRushException("Hết thời gian giữ chỗ", HttpStatus.GONE);
+        }
+
+        return sessionExpiresAt;
     }
 }

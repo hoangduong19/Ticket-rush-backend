@@ -48,7 +48,6 @@ public class UserController {
     @GetMapping("/users/me")
     public ResponseEntity<UserInformationResponseDTO> getMyProfile() {
         String currentUsername = SecurityUtils.getCurrentUsername(); //hardcoded
-        System.out.println(currentUsername);
         UserInformationResponseDTO dto = userService.getDataByUsername(currentUsername);
         return ResponseEntity.ok(dto);
     }
@@ -56,7 +55,6 @@ public class UserController {
     @PostMapping("/users/me/avatar")
     public ResponseEntity<?> updateAvatar(@RequestParam("file")MultipartFile file) {
         String currentUsername = SecurityUtils.getCurrentUsername(); //hardcode
-        System.out.println(currentUsername);
         String newUrl = userService.updateProfileAvatar(currentUsername, file);
         return ResponseEntity.ok(Map.of("url", newUrl));
     }
