@@ -38,19 +38,8 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public ResponseEntity<?> login(@RequestBody User user) {
-        // 1. Logic xác thực user (của bạn đã có)
-        String token = userService.verify(user);
-
-        // 2. Lấy thông tin user từ database để có ID
-        User fullUser = userRepository.findByUsername(user.getUsername());
-
-        // 3. TRẢ VỀ DỮ LIỆU DẠNG CẶP KEY-VALUE (JSON)
-        Map<String, Object> response = new HashMap<>();
-        response.put("token", token);
-        response.put("userId", fullUser.getUserId()); // Đảm bảo trả về userId ở đây
-
-        return ResponseEntity.ok(response);
+    public String login(@RequestBody User user) {
+        return userService.verify(user);
     }
 
     @PutMapping("/users/me")
