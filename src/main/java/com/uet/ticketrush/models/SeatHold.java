@@ -77,4 +77,11 @@ public class SeatHold {
         long seconds = Duration.between(LocalDateTime.now(), expiresAt).getSeconds();
         return Math.max(0, seconds);
     }
+
+    public void addSeats(Set<Seat> newSeats) {
+        if (this.seats == null) {
+            this.seats = new HashSet<>();
+        }
+        this.seats.addAll(newSeats);
+    }
 }

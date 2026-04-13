@@ -17,5 +17,11 @@ public interface SeatHoldRepository extends JpaRepository<SeatHold, UUID> {
     @Query("SELECT h FROM SeatHold h JOIN FETCH h.seats WHERE h.holdId = :id")
     Optional<SeatHold> findByIdWithSeats(@Param("id") UUID id);
 
+    Optional<SeatHold> findByUser_UserIdAndEvent_EventIdAndStatus(
+            UUID userId,
+            UUID eventId,
+            HoldStatus status
+    );
+
     List<SeatHold> findAllByStatusAndExpiresAtBefore(HoldStatus status, LocalDateTime dateTime);
 }
