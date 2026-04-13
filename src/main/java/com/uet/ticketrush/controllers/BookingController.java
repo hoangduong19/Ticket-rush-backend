@@ -13,6 +13,7 @@ import java.util.UUID;
 @RestController
 @RequestMapping("/seats")
 @RequiredArgsConstructor
+@CrossOrigin(origins = "http://localhost:3000")
 public class BookingController {
     private final BookingFacade bookingFacade;
 
