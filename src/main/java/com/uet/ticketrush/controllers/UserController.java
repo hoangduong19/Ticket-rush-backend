@@ -3,6 +3,7 @@ package com.uet.ticketrush.controllers;
 import com.uet.ticketrush.dtos.UserInformationResponseDTO;
 import com.uet.ticketrush.dtos.UserUpdateProfileDTO;
 import com.uet.ticketrush.models.User;
+import com.uet.ticketrush.repos.UserRepository;
 import com.uet.ticketrush.services.MyUserDetailsService;
 import com.uet.ticketrush.services.UserService;
 import com.uet.ticketrush.util.SecurityUtils;
@@ -11,6 +12,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -21,6 +23,9 @@ public class UserController {
 
     @Autowired
     private MyUserDetailsService myUserDetailsService;
+
+    @Autowired
+    private UserRepository userRepository;
 
     @GetMapping("/users")
     public List<User> getUser() {
@@ -33,8 +38,19 @@ public class UserController {
     }
 
     @PostMapping("/login")
-    public String login(@RequestBody User user) {
-        return userService.verify(user);
+    public ResponseEntity<?> login(@RequestBody User user) {
+        // 1. Logic xác thực user (của bạn đã có)
+        String token = userService.verify(user);
+
+        // 2. Lấy thông tin user từ database để có ID
+        User fullUser = userRepository.findByUsername(user.getUsername());
+
+        // 3. TRẢ VỀ DỮ LIỆU DẠNG CẶP KEY-VALUE (JSON)
+        Map<String, Object> response = new HashMap<>();
+        response.put("token", token);
+        response.put("userId", fullUser.getUserId()); // Đảm bảo trả về userId ở đây
+
+        return ResponseEntity.ok(response);
     }
 
     @PutMapping("/users/me")
