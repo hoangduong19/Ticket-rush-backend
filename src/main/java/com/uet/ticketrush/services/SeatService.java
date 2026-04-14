@@ -2,7 +2,6 @@ package com.uet.ticketrush.services;
 
 import com.uet.ticketrush.enums.SeatStatus;
 import com.uet.ticketrush.exceptions.TicketRushException;
-import com.uet.ticketrush.models.Event;
 import com.uet.ticketrush.models.Seat;
 import com.uet.ticketrush.repos.SeatRepository;
 import lombok.RequiredArgsConstructor;
@@ -39,6 +38,10 @@ public class SeatService {
 
             throw new TicketRushException("Ghế đã được book: " + String.join(", ", failedNames), HttpStatus.CONFLICT);
         }
+    }
+
+    public void unlockSeats(List<UUID> seatIds) {
+        seatRepository.updateStatusForSeats(seatIds, SeatStatus.Available, SeatStatus.Locked);
     }
 
 }

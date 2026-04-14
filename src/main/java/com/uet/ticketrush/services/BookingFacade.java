@@ -2,9 +2,9 @@ package com.uet.ticketrush.services;
 
 import com.uet.ticketrush.dtos.BookingRequestDTO;
 import com.uet.ticketrush.dtos.SeatHoldResponseDTO;
+import com.uet.ticketrush.dtos.SeatSyncResult;
 import com.uet.ticketrush.enums.HoldStatus;
 import com.uet.ticketrush.exceptions.TicketRushException;
-import com.uet.ticketrush.models.Seat;
 import com.uet.ticketrush.models.SeatHold;
 import com.uet.ticketrush.repos.EventRepository;
 import com.uet.ticketrush.repos.SeatHoldRepository;
@@ -18,9 +18,7 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
-import java.util.Set;
 import java.util.UUID;
-import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
@@ -40,20 +38,47 @@ public class BookingFacade {
         Optional<SeatHold> existingHoldOpt = holdRepository.findByUser_UserIdAndEvent_EventIdAndStatus(
                 request.userId(), request.eventId(), HoldStatus.Active);
 
-        if (existingHoldOpt.isPresent()) {
-            SeatHold existingHold = existingHoldOpt.get();
-
-            List<UUID> trulyNewIds = filterNewSeats(existingHold, request.seatIds());
-
-            if (!trulyNewIds.isEmpty()) {
-                seatService.lockSeats(trulyNewIds);
-                holdService.addSeatsToExistingHold(existingHold, trulyNewIds, sessionExpiresAt);
-            }
-            return existingHoldOpt.get().getHoldId();
-        } else {
+        if (existingHoldOpt.isEmpty()) {
             seatService.lockSeats(request.seatIds());
             return holdService.createHold(request.userId(), request.eventId(), request.seatIds(), sessionExpiresAt).getHoldId();
         }
+
+        SeatHold existingHold = existingHoldOpt.get();
+
+        SeatSyncResult changes = existingHold.calculateChanges(request.seatIds());
+
+
+        if (!changes.hasChanges()) {
+            return existingHold.getHoldId();
+        }
+
+        //Remove truoc khi add
+        if (!changes.seatsToRemove().isEmpty()) {
+            seatService.unlockSeats(changes.seatsToRemove());
+            holdService.removeSeatsFromHold(existingHold, changes.seatsToRemove());
+        }
+
+        if (!changes.seatsToAdd().isEmpty()) {
+            seatService.lockSeats(changes.seatsToAdd());
+            holdService.addSeatsToExistingHold(existingHold, changes.seatsToAdd(), sessionExpiresAt);
+        }
+
+        return existingHold.getHoldId();
+
+//        if (existingHoldOpt.isPresent()) {
+//            SeatHold existingHold = existingHoldOpt.get();
+//
+//            List<UUID> trulyNewIds = filterNewSeats(existingHold, request.seatIds());
+//
+//            if (!trulyNewIds.isEmpty()) {
+//                seatService.lockSeats(trulyNewIds);
+//                holdService.addSeatsToExistingHold(existingHold, trulyNewIds, sessionExpiresAt);
+//            }
+//            return existingHoldOpt.get().getHoldId();
+//        } else {
+//            seatService.lockSeats(request.seatIds());
+//            return holdService.createHold(request.userId(), request.eventId(), request.seatIds(), sessionExpiresAt).getHoldId();
+//        }
     }
 
     public SeatHoldResponseDTO getHoldDetails(UUID holdId) {
@@ -77,13 +102,4 @@ public class BookingFacade {
         );
     }
 
-    private List<UUID> filterNewSeats(SeatHold hold, List<UUID> requestedIds) {
-        Set<UUID> currentIds = hold.getSeats().stream()
-                .map(Seat::getSeatId)
-                .collect(Collectors.toSet());
-
-        return requestedIds.stream()
-                .filter(id -> !currentIds.contains(id))
-                .toList();
-    }
 }

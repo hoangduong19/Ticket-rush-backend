@@ -1,5 +1,6 @@
 package com.uet.ticketrush.models;
 
+import com.uet.ticketrush.dtos.SeatSyncResult;
 import com.uet.ticketrush.enums.HoldStatus;
 import jakarta.persistence.*;
 import lombok.*;
@@ -8,6 +9,7 @@ import java.math.BigDecimal;
 import java.time.Duration;
 import java.time.LocalDateTime;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Set;
 import java.util.UUID;
 
@@ -84,4 +86,27 @@ public class SeatHold {
         }
         this.seats.addAll(newSeats);
     }
+
+    public void removeSeats(List<UUID> seatIdsToRemove) {
+        this.seats.removeIf(seat -> seatIdsToRemove.contains(seat.getSeatId()));
+    }
+
+    public SeatSyncResult calculateChanges(List<UUID> targetSeatIds) {
+        final List<UUID> safeTargetSeatIds = (targetSeatIds == null) ? List.of() : targetSeatIds;
+
+        List<UUID> currentSeatIds = this.seats.stream()
+                .map(Seat::getSeatId)
+                .toList();
+
+        List<UUID> toAdd = safeTargetSeatIds.stream()
+                .filter(id -> !currentSeatIds.contains(id))
+                .toList();
+
+        List<UUID> toRemove = currentSeatIds.stream()
+                .filter(id -> !safeTargetSeatIds.contains(id))
+                .toList();
+
+        return new SeatSyncResult(toAdd, toRemove);
+    }
+
 }

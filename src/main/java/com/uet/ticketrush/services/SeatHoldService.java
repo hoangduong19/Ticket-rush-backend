@@ -38,4 +38,11 @@ public class SeatHoldService {
         hold.setExpiresAt(expiry);
         holdRepository.save(hold);
     }
+
+    public void removeSeatsFromHold(SeatHold hold, List<UUID> seatsToRemove) {
+        List<Seat> newSeats = seatRepository.findAllById(seatsToRemove);
+        hold.removeSeats(seatsToRemove);
+        holdRepository.save(hold);
+    }
+
 }
