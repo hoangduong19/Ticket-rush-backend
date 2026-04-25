@@ -1,5 +1,6 @@
 package com.uet.ticketrush.controllers;
 
+import com.uet.ticketrush.dtos.ChangePasswordRequest;
 import com.uet.ticketrush.dtos.UserInformationResponseDTO;
 import com.uet.ticketrush.dtos.UserUpdateProfileDTO;
 import com.uet.ticketrush.models.User;
@@ -7,12 +8,12 @@ import com.uet.ticketrush.repos.UserRepository;
 import com.uet.ticketrush.services.MyUserDetailsService;
 import com.uet.ticketrush.services.UserService;
 import com.uet.ticketrush.util.SecurityUtils;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -62,5 +63,12 @@ public class UserController {
         String currentUsername = SecurityUtils.getCurrentUsername(); //hardcode
         String newUrl = userService.updateProfileAvatar(currentUsername, file);
         return ResponseEntity.ok(Map.of("url", newUrl));
+    }
+
+    @PutMapping("/change-password")
+    public ResponseEntity<?> updatePassword(@RequestBody @Valid ChangePasswordRequest request) {
+        String currentUsername = SecurityUtils.getCurrentUsername();
+        userService.changePassword(currentUsername, request);
+        return ResponseEntity.ok("Thay đổi mật khẩu thành công!");
     }
 }
