@@ -1,6 +1,7 @@
 package com.uet.ticketrush.services;
 
 import com.uet.ticketrush.dtos.ChangePasswordRequest;
+import com.uet.ticketrush.dtos.RegisterRequestDTO;
 import com.uet.ticketrush.dtos.UserInformationResponseDTO;
 import com.uet.ticketrush.dtos.UserUpdateProfileDTO;
 import com.uet.ticketrush.exceptions.TicketRushException;
@@ -39,10 +40,16 @@ public class UserService {
         return userRepository.findAll();
     }
 
-    public User register(User user) {
-        user.setPassword(encoder.encode(user.getPassword()));
-        userRepository.save(user);
-        return user;
+    public User register(RegisterRequestDTO request) {
+        User user = User.builder()
+                .username(request.username())
+                .password(encoder.encode(request.password()))
+                .age(request.age())
+                .displayName(request.displayName())
+                .gender(request.gender())
+                .build();
+
+        return userRepository.save(user);
     }
 
     public String verify(User user) {

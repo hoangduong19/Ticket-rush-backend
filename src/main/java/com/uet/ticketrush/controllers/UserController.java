@@ -1,6 +1,7 @@
 package com.uet.ticketrush.controllers;
 
 import com.uet.ticketrush.dtos.ChangePasswordRequest;
+import com.uet.ticketrush.dtos.RegisterRequestDTO;
 import com.uet.ticketrush.dtos.UserInformationResponseDTO;
 import com.uet.ticketrush.dtos.UserUpdateProfileDTO;
 import com.uet.ticketrush.models.User;
@@ -34,8 +35,8 @@ public class UserController {
     }
 
     @PostMapping("/register")
-    public User register(@RequestBody User user) {
-        return userService.register(user);
+    public User register(@RequestBody @Valid RegisterRequestDTO registerRequestDTO) {
+        return userService.register(registerRequestDTO);
     }
 
     @PostMapping("/login")
