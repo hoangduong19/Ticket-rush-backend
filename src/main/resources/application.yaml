@@ -24,6 +24,12 @@ spring:
     date-format: yyyy-MM-dd HH:mm:ss
     time-zone: Asia/Ho_Chi_Minh
 
+  data:
+    redis:
+      url: ${REDIS_URL}
+      ssl:
+        enabled: true
+
   servlet:
     multipart:
       max-file-size: 10MB
