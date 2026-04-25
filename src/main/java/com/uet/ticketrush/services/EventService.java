@@ -14,6 +14,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +25,7 @@ import java.util.UUID;
 public class EventService {
     private final EventRepository eventRepository;
     private final SeatRepository seatRepository;
+    private final CloudinaryService cloudinaryService;
 
     // Hàm lấy tất cả sự kiện
     public List<Event> getAllEvents() {
@@ -79,5 +81,24 @@ public class EventService {
 
     public List<Seat> getSeatsStatus(UUID eventId) {
         return seatRepository.findByEvent_EventId(eventId);
+    }
+
+    public Event createEventWithImage(EventRequestDTO dto, MultipartFile file) {
+        // 1. Upload ảnh lên Cloudinary và lấy URL
+        String imageUrl = cloudinaryService.uploadEventBanner(file);
+
+        // 2. Tạo đối tượng Event
+        Event event = Event.builder()
+                .title(dto.title())
+                .description(dto.description())
+                .location(dto.location())
+                .date(dto.date())
+                .status(EventStatus.Published)
+                .category(dto.category())
+                .bannerUrl(imageUrl) // LƯU LINK ẢNH VÀO ĐÂY
+                .build();
+
+        event.validateBasicInfo();
+        return eventRepository.save(event);
     }
 }

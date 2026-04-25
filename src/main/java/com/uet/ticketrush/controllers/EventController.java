@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.http.MediaType;
+import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
 import java.util.UUID;
@@ -56,5 +58,14 @@ public class EventController {
     public ResponseEntity<List<Seat>> getSeatsStatus(@PathVariable UUID eventId) {
         List<Seat> seats = eventService.getSeatsStatus(eventId);
         return ResponseEntity.ok(seats);
+    }
+
+    @PostMapping(value = "/admin/events", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    public ResponseEntity<Event> createEvent(
+            @RequestPart("event") EventRequestDTO request, // Nhận thông tin chữ
+            @RequestPart("file") MultipartFile file) {    // Nhận tệp ảnh
+
+        Event newEvent = eventService.createEventWithImage(request, file);
+        return new ResponseEntity<>(newEvent, HttpStatus.CREATED);
     }
 }
