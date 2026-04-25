@@ -1,10 +1,13 @@
 package com.uet.ticketrush.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Primary;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.AuthenticationProvider;
+import org.springframework.security.authentication.ProviderManager;
 import org.springframework.security.authentication.dao.DaoAuthenticationProvider;
 import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.authentication.configuration.AuthenticationConfiguration;
@@ -25,10 +28,18 @@ import java.util.Arrays;
 @EnableWebSecurity
 public class SecurityConfig {
     @Autowired
+    @Qualifier("myUserDetailsService")
     private UserDetailsService userDetailsService;
 
     @Autowired
+    @Qualifier("adminUserDetailsService")
+    private UserDetailsService adminDetailsService;
+
+    @Autowired
     private JwtFilter jwtFilter;
+
+    @Autowired
+    private AdminJwtFilter adminJwtFilter;
 
     @Bean
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
@@ -36,7 +47,20 @@ public class SecurityConfig {
                 .csrf(customizer -> customizer.disable())
                 .cors(Customizer.withDefaults())
                 .authorizeHttpRequests(request -> request
-                        .requestMatchers("/register", "/login", "/admin/events/**", "/users/me/**", "/swagger-ui/**", "/v3/api-docs/**", "/events/**", "/seats/**", "/queue/**", "/users/**")
+                        .requestMatchers(
+                                "/register",
+                                "/login",
+                                "/adminLogin",
+                                "/admin/events/**",
+                                "/users/me/**",
+                                "/swagger-ui/**",
+                                "/v3/api-docs/**",
+                                "/events/**",
+                                "/seats/**",
+                                "/queue/**",
+                                "/users/**",
+                                "/admins/**"
+                        )
                         .permitAll()
                         .requestMatchers("/error").permitAll()
                         .anyRequest().authenticated())
@@ -49,6 +73,7 @@ public class SecurityConfig {
                 .sessionManagement(session ->
                         session.sessionCreationPolicy(SessionCreationPolicy.STATELESS))
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
+                .addFilterBefore(adminJwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .build();
     }
 //    public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
@@ -72,16 +97,41 @@ public class SecurityConfig {
         return source;
     }
 
+//    @Bean
+//    public AuthenticationProvider authenticationProvider() {
+//        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
+////        authProvider.setPasswordEncoder(NoOpPasswordEncoder.getInstance());
+//        authProvider.setPasswordEncoder(new BCryptPasswordEncoder(12));
+//        return authProvider;
+//    }
+//
+//    @Bean
+//    public AuthenticationProvider adminAuthenticationProvider() {
+//        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(adminDetailsService);
+////        authProvider.setPasswordEncoder(NoOpPasswordEncoder.getInstance());
+//        authProvider.setPasswordEncoder(new BCryptPasswordEncoder(12));
+//        return authProvider;
+//    }
+//
     @Bean
-    public AuthenticationProvider authenticationProvider() {
-        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
-//        authProvider.setPasswordEncoder(NoOpPasswordEncoder.getInstance());
-        authProvider.setPasswordEncoder(new BCryptPasswordEncoder(12));
-        return authProvider;
-    }
-
-    @Bean
+    @Primary
     public AuthenticationManager authenticationManager(AuthenticationConfiguration authenticationConfiguration) throws Exception {
         return authenticationConfiguration.getAuthenticationManager();
+    }
+
+    @Bean("userAuthenticationManager")
+    public AuthenticationManager userAuthenticationManager() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(userDetailsService);
+        authProvider.setPasswordEncoder(new BCryptPasswordEncoder(12));
+
+        return new ProviderManager(authProvider);
+    }
+
+    @Bean("adminAuthenticationManager")
+    public AuthenticationManager adminAuthenticationManager() {
+        DaoAuthenticationProvider authProvider = new DaoAuthenticationProvider(adminDetailsService);
+        authProvider.setPasswordEncoder(new BCryptPasswordEncoder(12));
+
+        return new ProviderManager(authProvider);
     }
 }

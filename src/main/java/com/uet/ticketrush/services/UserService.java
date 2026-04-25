@@ -1,12 +1,12 @@
 package com.uet.ticketrush.services;
 
-import com.uet.ticketrush.dtos.ChangePasswordRequest;
 import com.uet.ticketrush.dtos.UserInformationResponseDTO;
 import com.uet.ticketrush.dtos.UserUpdateProfileDTO;
 import com.uet.ticketrush.exceptions.TicketRushException;
 import com.uet.ticketrush.models.User;
 import com.uet.ticketrush.repos.UserRepository;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
@@ -29,6 +29,7 @@ public class UserService {
     private CloudinaryService cloudinaryService;
 
     @Autowired
+    @Qualifier("userAuthenticationManager")
     private AuthenticationManager authManager;
 
     private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
@@ -71,24 +72,6 @@ public class UserService {
         User user = userRepository.findByUsername(username);
         user.updateProfile(dto.displayName(), dto.age(), dto.gender());
         return userRepository.save(user);
-    }
-
-    public void changePassword(String username, ChangePasswordRequest request) {
-        User user = userRepository.findByUsername(username);
-        if (user == null) {
-            throw new TicketRushException("Không tìm thấy user: " + username, HttpStatus.NOT_FOUND);
-        }
-
-        if (!encoder.matches(request.oldPassword(), user.getPassword())) {
-            throw new TicketRushException("Old Password is Wrong!", HttpStatus.BAD_REQUEST);
-        }
-
-        if (encoder.matches(request.newPassword(), user.getPassword())) {
-            throw new TicketRushException("Mật khẩu mới không được trùng mật khẩu cũ!", HttpStatus.BAD_REQUEST);
-        }
-
-        user.setPassword(encoder.encode(request.newPassword()));
-        userRepository.save(user);
     }
 
     public String updateProfileAvatar(String username, MultipartFile file) {

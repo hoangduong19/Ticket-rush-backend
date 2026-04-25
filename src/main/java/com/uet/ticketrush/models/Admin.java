@@ -14,11 +14,11 @@ public class Admin {
     @Column(name = "admin_id", updatable = false, nullable = false)
     private UUID adminId;
 
-    @Column(nullable = false, unique = true)
-    private String email;
+    @Column(name ="email", nullable = false, unique = true)
+    private String username;
 
     @Column(name = "password_hash", nullable = false)
-    private String passwordHash;
+    private String password;
 
     @Column(name = "display_name", length = 50)
     private String displayName;
