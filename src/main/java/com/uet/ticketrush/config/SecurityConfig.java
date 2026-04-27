@@ -50,6 +50,7 @@ public class SecurityConfig {
                                 "/register",
                                 "/login",
                                 "/adminLogin",
+                                "/adminRegister",
                                 "/admin/events/**",
                                 "/users/me/**",
                                 "/swagger-ui/**",

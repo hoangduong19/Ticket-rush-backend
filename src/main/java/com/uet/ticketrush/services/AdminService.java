@@ -7,6 +7,7 @@ import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.security.authentication.AuthenticationManager;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -22,6 +23,8 @@ public class AdminService {
     @Autowired
     @Qualifier("adminAuthenticationManager")
     private AuthenticationManager authManager;
+
+    private BCryptPasswordEncoder encoder = new BCryptPasswordEncoder();
 
     public List<Admin> findAll() {
         return adminRepository.findAll();
@@ -40,5 +43,15 @@ public class AdminService {
         }
 
         return "fail";
+    }
+
+    public Admin register(Admin request) {
+        Admin admin = Admin.builder()
+                .username(request.getUsername())
+                .password(encoder.encode(request.getPassword()))
+                .displayName(request.getDisplayName())
+                .build();
+
+        return adminRepository.save(admin);
     }
 }
