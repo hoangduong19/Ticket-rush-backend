@@ -47,7 +47,6 @@ public class UserController {
     @PutMapping("/users/me")
     public ResponseEntity<User> updateProfile(@RequestBody UserUpdateProfileDTO dto) {
         String currentUsername = SecurityUtils.getCurrentUsername(); //hardcoded
-        System.out.println(currentUsername);
         User updatedUser = userService.updateProfile(currentUsername, dto);
         return ResponseEntity.ok(updatedUser);
     }
