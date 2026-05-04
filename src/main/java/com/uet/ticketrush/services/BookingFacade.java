@@ -5,6 +5,7 @@ import com.uet.ticketrush.dtos.SeatHoldResponseDTO;
 import com.uet.ticketrush.dtos.SeatSyncResult;
 import com.uet.ticketrush.enums.HoldStatus;
 import com.uet.ticketrush.exceptions.TicketRushException;
+import com.uet.ticketrush.models.Event;
 import com.uet.ticketrush.models.SeatHold;
 import com.uet.ticketrush.repos.EventRepository;
 import com.uet.ticketrush.repos.SeatHoldRepository;
@@ -33,6 +34,10 @@ public class BookingFacade {
 
     @Transactional
     public UUID createReservation(BookingRequestDTO request) {
+        Event event = eventRepository.findById(request.eventId())
+                .orElseThrow(() -> new TicketRushException("Sự kiện không tồn tại", HttpStatus.NOT_FOUND));
+        event.validateBookable();
+
         LocalDateTime sessionExpiresAt = virtualQueueService.validateAndGetSessionExpiry(request.eventId(), request.userId());
 
         Optional<SeatHold> existingHoldOpt = holdRepository.findByUser_UserIdAndEvent_EventIdAndStatus(

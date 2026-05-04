@@ -62,5 +62,15 @@ public class Event {
         if (this.location == null || this.location.isBlank()) {
             throw new TicketRushException("Địa điểm không được để trống", HttpStatus.BAD_REQUEST); //400
         }
+
+        if (this.date.isBefore(LocalDateTime.now())) {
+            throw new TicketRushException("Ngày diễn ra không được ở quá khứ", HttpStatus.BAD_REQUEST);
+        }
+    }
+
+    public void validateBookable() {
+        if (this.status == EventStatus.Ended || this.status == EventStatus.Cancelled) {
+            throw new TicketRushException("Sự kiện đã kết thúc hoặc bị hủy", HttpStatus.BAD_REQUEST);
+        }
     }
 }
