@@ -68,4 +68,10 @@ public class EventController {
         Event newEvent = eventService.createEventWithImage(request, file);
         return new ResponseEntity<>(newEvent, HttpStatus.CREATED);
     }
+
+    @DeleteMapping("/admin/events/{eventId}")
+    public ResponseEntity<?> deleteEvent(@PathVariable UUID eventId) {
+        eventService.deleteEvent(eventId);
+        return ResponseEntity.ok().build();
+    }
 }

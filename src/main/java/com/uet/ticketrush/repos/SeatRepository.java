@@ -23,4 +23,9 @@ public interface SeatRepository extends JpaRepository<Seat, UUID> {
     );
 
     List<Seat> findByEvent_EventId(UUID eventId);
+    void deleteByEvent_EventId(UUID eventId);
+
+    @Modifying
+    @Query("DELETE FROM Seat s WHERE s.event.eventId = :eventId")
+    void bulkDeleteByEventId(@Param("eventId") UUID eventId);
 }

@@ -9,7 +9,9 @@ import com.uet.ticketrush.exceptions.TicketRushException;
 import com.uet.ticketrush.models.Event;
 import com.uet.ticketrush.models.Seat;
 import com.uet.ticketrush.repos.EventRepository;
+import com.uet.ticketrush.repos.SeatHoldRepository;
 import com.uet.ticketrush.repos.SeatRepository;
+import com.uet.ticketrush.repos.TicketRepository;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
@@ -26,6 +28,8 @@ public class EventService {
     private final EventRepository eventRepository;
     private final SeatRepository seatRepository;
     private final CloudinaryService cloudinaryService;
+    private final SeatHoldRepository seatHoldRepository;
+    private final TicketRepository ticketRepository;
 
     // Hàm lấy tất cả sự kiện
     public List<Event> getAllEvents() {
@@ -100,5 +104,14 @@ public class EventService {
 
         event.validateBasicInfo();
         return eventRepository.save(event);
+    }
+
+    @Transactional
+    public void deleteEvent(UUID eventId) {
+        // Xóa theo mảng ID giúp giảm số lượng lệnh gửi đi
+        ticketRepository.deleteByEventId(eventId);
+        seatHoldRepository.bulkDeleteByEventId(eventId);
+        seatRepository.bulkDeleteByEventId(eventId);
+        eventRepository.deleteById(eventId);
     }
 }

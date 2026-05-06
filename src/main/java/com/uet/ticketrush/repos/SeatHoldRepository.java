@@ -3,6 +3,7 @@ package com.uet.ticketrush.repos;
 import com.uet.ticketrush.enums.HoldStatus;
 import com.uet.ticketrush.models.SeatHold;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -24,4 +25,10 @@ public interface SeatHoldRepository extends JpaRepository<SeatHold, UUID> {
     );
 
     List<SeatHold> findAllByStatusAndExpiresAtBefore(HoldStatus status, LocalDateTime dateTime);
+
+    void deleteByEvent_EventId(UUID eventId);
+
+    @Modifying
+    @Query("DELETE FROM SeatHold sh WHERE sh.event.eventId = :eventId")
+    void bulkDeleteByEventId(@Param("eventId") UUID eventId);
 }
