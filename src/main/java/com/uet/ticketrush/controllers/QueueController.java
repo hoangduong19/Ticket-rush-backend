@@ -6,6 +6,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.UUID;
@@ -34,7 +35,7 @@ public class QueueController {
         if ("ACTIVE".equals(status.get("status"))) {
             LocalDateTime expiry = queueService.validateAndGetSessionExpiry(eventId, UUID.fromString(userId));
 
-            response.put("expiresAt", expiry);
+            response.put("expiresAt", expiry.atZone(ZoneId.systemDefault()).toInstant().toString());
         }
 
         return ResponseEntity.ok(response);
