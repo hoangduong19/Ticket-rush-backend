@@ -40,6 +40,10 @@ public class BookingFacade {
 
         LocalDateTime sessionExpiresAt = virtualQueueService.validateAndGetSessionExpiry(request.eventId(), request.userId());
 
+        if (request.seatIds().size() > 5) {
+            throw new TicketRushException("Không được chọn quá 5 ghế trong một phiên", HttpStatus.BAD_REQUEST);
+        }
+
         Optional<SeatHold> existingHoldOpt = holdRepository.findByUser_UserIdAndEvent_EventIdAndStatus(
                 request.userId(), request.eventId(), HoldStatus.Active);
 
@@ -51,7 +55,6 @@ public class BookingFacade {
         SeatHold existingHold = existingHoldOpt.get();
 
         SeatSyncResult changes = existingHold.calculateChanges(request.seatIds());
-
 
         if (!changes.hasChanges()) {
             return existingHold.getHoldId();
