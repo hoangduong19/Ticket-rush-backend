@@ -74,4 +74,14 @@ public class EventController {
         eventService.deleteEvent(eventId);
         return ResponseEntity.ok().build();
     }
+
+    @PutMapping(value = "/admin/events/{eventId}", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
+    public ResponseEntity<Event> updateEvent(
+            @PathVariable UUID eventId,
+            @RequestPart("event") EventRequestDTO request,
+            @RequestPart(value = "file", required = false) MultipartFile file) {
+
+        Event updatedEvent = eventService.updateEvent(eventId, request, file);
+        return ResponseEntity.ok(updatedEvent);
+    }
 }

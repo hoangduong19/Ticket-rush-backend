@@ -114,4 +114,29 @@ public class EventService {
         seatRepository.bulkDeleteByEventId(eventId);
         eventRepository.deleteById(eventId);
     }
+
+    @Transactional
+    public Event updateEvent(UUID id, EventRequestDTO dto, MultipartFile file) {
+        Event event = eventRepository.findById(id)
+                .orElseThrow(() -> new TicketRushException("Sự kiện không tồn tại", HttpStatus.NOT_FOUND));
+
+        // Cập nhật các trường thông tin
+        event.setTitle(dto.title());
+        event.setDescription(dto.description());
+        event.setLocation(dto.location());
+        event.setDate(dto.date());
+        event.setCategory(dto.category());
+
+        // Nếu Admin có upload ảnh mới
+        if (file != null && !file.isEmpty()) {
+            // Xóa ảnh cũ trên Cloudinary (nếu cần)
+            cloudinaryService.deleteImage(event.getBannerUrl());
+            // Upload ảnh mới
+            String newUrl = cloudinaryService.uploadEventBanner(file);
+            event.setBannerUrl(newUrl);
+        }
+
+        event.validateBasicInfo();
+        return eventRepository.save(event);
+    }
 }
