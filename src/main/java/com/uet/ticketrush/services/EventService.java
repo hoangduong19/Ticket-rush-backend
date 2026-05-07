@@ -18,6 +18,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.UUID;
@@ -32,9 +33,9 @@ public class EventService {
     private final TicketRepository ticketRepository;
 
     // Hàm lấy tất cả sự kiện
-    public List<Event> getAllEvents() {
+    /*public List<Event> getAllEvents() {
         return eventRepository.findAll();
-    }
+    }*/
 
     public Event getEventById(UUID eventId) {
         return eventRepository.findById(eventId)
@@ -80,6 +81,16 @@ public class EventService {
                 allSeats.add(seat);
             }
         }
+
+        BigDecimal minPrice = payload.getRowConfigs().stream()
+                .filter(r -> "GENERAL".equalsIgnoreCase(r.getSeatType()))
+                .map(RowConfigDTO::getPrice)
+                .min(BigDecimal::compareTo)
+                .orElse(BigDecimal.ZERO);
+
+
+        event.setPrice(minPrice);
+        eventRepository.save(event);
         seatRepository.saveAll(allSeats);
     }
 
@@ -138,5 +149,15 @@ public class EventService {
 
         event.validateBasicInfo();
         return eventRepository.save(event);
+    }
+
+    // Trong EventService.java
+    public List<Event> getAllEvents() {
+        List<Event> events = eventRepository.findAll();
+        for (Event event : events) {
+            BigDecimal minPrice = seatRepository.findMinPriceByEventId(event.getEventId(), "GENERAL");
+            event.setPrice(minPrice);
+        }
+        return events;
     }
 }

@@ -9,6 +9,7 @@ import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.UpdateTimestamp;
 import org.springframework.http.HttpStatus;
 
+import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -51,6 +52,9 @@ public class Event {
     @Enumerated(EnumType.STRING)
     @Column(name = "category")
     private EventCategory category;
+
+    @Column(name = "price")
+    private BigDecimal price;
 
     public void validateBasicInfo() {
         if (this.title == null || this.title.isBlank()) {
