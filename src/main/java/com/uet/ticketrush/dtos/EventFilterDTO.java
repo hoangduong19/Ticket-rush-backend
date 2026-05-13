@@ -16,14 +16,14 @@ public record EventFilterDTO(
         BigDecimal priceMax,
 
         @PositiveOrZero
-        int page,
+        Integer page,
 
         @Positive
-        int size
+        Integer size
 ) {
     // Default values
     public EventFilterDTO {
-        if (page < 0) page = 0;
-        if (size <= 0) size = 9;
+        if (page == null || page < 0) page = 0;
+        if (size == null || size <= 0) size = 9;
     }
 }
