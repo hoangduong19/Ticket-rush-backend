@@ -77,12 +77,21 @@ public class EventService {
                 .description(dto.description())
                 .location(dto.location())
                 .date(dto.date())
-                .status(EventStatus.Published)
+                .status(EventStatus.Draft)
                 .category(dto.category())
                 .build();
 
         event.validateBasicInfo();
         return eventRepository.save(event);
+    }
+
+    @Transactional
+    public void publishEvent(UUID eventId) {
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new TicketRushException("Sự kiện không tồn tại", HttpStatus.NOT_FOUND));
+
+        event.setStatus(EventStatus.Published);
+        eventRepository.save(event);
     }
 
     // Trong EventService.java
@@ -137,7 +146,7 @@ public class EventService {
                 .description(dto.description())
                 .location(dto.location())
                 .date(dto.date())
-                .status(EventStatus.Published)
+                .status(EventStatus.Draft)
                 .category(dto.category())
                 .bannerUrl(imageUrl) // LƯU LINK ẢNH VÀO ĐÂY
                 .build();
@@ -156,25 +165,67 @@ public class EventService {
     }
 
     @Transactional
-    public Event updateEvent(UUID id, EventRequestDTO dto, MultipartFile file) {
+    public Event updateEvent(UUID id, EventRequestDTO dto, MultipartFile file, SeatingPayloadDTO seatingPayload) {
+        // 1. Tìm sự kiện cũ
         Event event = eventRepository.findById(id)
                 .orElseThrow(() -> new TicketRushException("Sự kiện không tồn tại", HttpStatus.NOT_FOUND));
 
-        // Cập nhật các trường thông tin
+        // 2. Kiểm tra an toàn: Nếu đã bán vé thì không cho phép sửa sơ đồ ghế (Tránh mất dữ liệu khách hàng)
+        // Lưu ý: Bạn cần thêm hàm này vào TicketRepository
+        boolean hasTickets = ticketRepository.existsBySeat_Event_EventId(id);
+        if (hasTickets) {
+            throw new TicketRushException("Không thể sửa sơ đồ ghế vì đã có vé được bán ra!", HttpStatus.BAD_REQUEST);
+        }
+
+        // 3. Cập nhật thông tin cơ bản
         event.setTitle(dto.title());
         event.setDescription(dto.description());
         event.setLocation(dto.location());
         event.setDate(dto.date());
         event.setCategory(dto.category());
 
-        // Nếu Admin có upload ảnh mới
+        // 4. Xử lý ảnh (Giữ nguyên logic cũ của bạn)
         if (file != null && !file.isEmpty()) {
-            // Xóa ảnh cũ trên Cloudinary (nếu cần)
-            cloudinaryService.deleteImage(event.getBannerUrl());
-            // Upload ảnh mới
+            if (event.getBannerUrl() != null) {
+                cloudinaryService.deleteImage(event.getBannerUrl());
+            }
             String newUrl = cloudinaryService.uploadEventBanner(file);
             event.setBannerUrl(newUrl);
         }
+
+        // 5. XỬ LÝ SƠ ĐỒ GHẾ (RE-GENERATE)
+        // Xóa toàn bộ ghế cũ của sự kiện này trong Database
+        seatRepository.deleteByEvent_EventId(id);
+
+        seatRepository.flush();
+
+        List<Seat> newSeats = new ArrayList<>();
+        // Chạy vòng lặp tạo ma trận ghế mới từ seatingPayload gửi lên
+        for (RowConfigDTO rowConfig : seatingPayload.getRowConfigs()) {
+            for (int s = 1; s <= seatingPayload.getSeatsPerRow(); s++) {
+                Seat seat = Seat.builder()
+                        .event(event)
+                        .sectionName(seatingPayload.getSectionLabel())
+                        .rowNumber(rowConfig.getRowNumber())
+                        .seatNumber(s)
+                        .price(rowConfig.getPrice())
+                        .status(SeatStatus.Available)
+                        .seatType(rowConfig.getSeatType())
+                        .version(0)
+                        .build();
+                newSeats.add(seat);
+            }
+        }
+        // Lưu hàng loạt ghế mới
+        seatRepository.saveAll(newSeats);
+
+        // 6. Cập nhật lại giá tiền hiển thị (Min Price) cho Event
+        // Lấy giá thấp nhất trong số các hàng vừa cấu hình
+        BigDecimal minPrice = seatingPayload.getRowConfigs().stream()
+                .map(RowConfigDTO::getPrice)
+                .min(BigDecimal::compareTo)
+                .orElse(BigDecimal.ZERO);
+        event.setPrice(minPrice);
 
         event.validateBasicInfo();
         return eventRepository.save(event);
@@ -184,9 +235,18 @@ public class EventService {
     public List<Event> getAllEvents() {
         List<Event> events = eventRepository.findAll();
         for (Event event : events) {
-            BigDecimal minPrice = seatRepository.findMinPriceByEventId(event.getEventId(), "GENERAL");
-            event.setPrice(minPrice);
+            try {
+                // Lấy giá thấp nhất
+                BigDecimal minPrice = seatRepository.findMinPriceByEventId(event.getEventId(), "GENERAL");
+
+                // QUAN TRỌNG: Nếu là Draft chưa có ghế, minPrice sẽ là null
+                // Hãy gán giá trị mặc định là 0 thay vì để null gây lỗi
+                event.setPrice(minPrice != null ? minPrice : BigDecimal.ZERO);
+            } catch (Exception e) {
+                event.setPrice(BigDecimal.ZERO);
+            }
         }
         return events;
     }
+
 }

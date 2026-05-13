@@ -17,6 +17,8 @@ public interface TicketRepository extends JpaRepository<Ticket, UUID> {
     @Modifying
     @Query("DELETE FROM Ticket t WHERE t.seat.event.eventId = :eventId")
     void deleteByEventId(@Param("eventId") UUID eventId);
+
+    boolean existsBySeat_Event_EventId(UUID id);
 }
 
 
