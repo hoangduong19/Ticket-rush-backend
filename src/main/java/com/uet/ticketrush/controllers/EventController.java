@@ -1,5 +1,6 @@
 package com.uet.ticketrush.controllers;
 
+import com.uet.ticketrush.dtos.EventFilterDTO;
 import com.uet.ticketrush.dtos.EventRequestDTO;
 import com.uet.ticketrush.dtos.SeatingPayloadDTO;
 import com.uet.ticketrush.models.Event;
@@ -7,10 +8,11 @@ import com.uet.ticketrush.models.Seat;
 import com.uet.ticketrush.services.EventService;
 import com.uet.ticketrush.services.SeatService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.http.MediaType;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.util.List;
@@ -33,9 +35,14 @@ public class EventController {
     }
 
     // THÊM HÀM NÀY ĐỂ TRẢ VỀ DANH SÁCH SỰ KIỆN (Nhiệm vụ 1)
+//    @GetMapping("/events")
+//    public ResponseEntity<?> getAllEvents() {
+//        return ResponseEntity.ok(eventService.getAllEvents());
+//    }
+
     @GetMapping("/events")
-    public ResponseEntity<?> getAllEvents() {
-        return ResponseEntity.ok(eventService.getAllEvents());
+    public ResponseEntity<Page<Event>> getFilteredEvent(@ModelAttribute EventFilterDTO filter) {
+        return ResponseEntity.ok(eventService.getFilteredEvents(filter));
     }
 
     @GetMapping("/events/{eventId}")

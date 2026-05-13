@@ -1,5 +1,6 @@
 package com.uet.ticketrush.services;
 
+import com.uet.ticketrush.dtos.EventFilterDTO;
 import com.uet.ticketrush.dtos.EventRequestDTO;
 import com.uet.ticketrush.dtos.RowConfigDTO;
 import com.uet.ticketrush.dtos.SeatingPayloadDTO;
@@ -13,6 +14,11 @@ import com.uet.ticketrush.repos.SeatHoldRepository;
 import com.uet.ticketrush.repos.SeatRepository;
 import com.uet.ticketrush.repos.TicketRepository;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -36,6 +42,29 @@ public class EventService {
     /*public List<Event> getAllEvents() {
         return eventRepository.findAll();
     }*/
+
+    public Page<Event> getFilteredEvents(EventFilterDTO filter) {
+        Pageable pageable = PageRequest.of(
+                filter.page(),
+                filter.size(),
+                Sort.by("date").ascending()
+        );
+
+        Specification<Event> spec = (root, query, cb) -> cb.conjunction();
+
+        if (filter.category() != null && !filter.category().isEmpty())
+            spec = spec.and((root, q, cb) -> root.get("category").in(filter.category()));
+        if (filter.dateFrom() != null)
+            spec = spec.and((root, q, cb) -> cb.greaterThanOrEqualTo(root.get("date"), filter.dateFrom()));
+        if (filter.dateTo() != null)
+            spec = spec.and((root, q, cb) -> cb.lessThanOrEqualTo(root.get("date"), filter.dateTo()));
+        if (filter.priceMin() != null)
+            spec = spec.and((root, q, cb) -> cb.greaterThanOrEqualTo(root.get("price"), filter.priceMin()));
+        if (filter.priceMax() != null)
+            spec = spec.and((root, q, cb) -> cb.lessThanOrEqualTo(root.get("price"), filter.priceMax()));
+
+        return eventRepository.findAll(spec, pageable);
+    }
 
     public Event getEventById(UUID eventId) {
         return eventRepository.findById(eventId)

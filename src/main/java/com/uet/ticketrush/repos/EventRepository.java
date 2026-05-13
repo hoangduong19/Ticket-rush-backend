@@ -2,6 +2,7 @@ package com.uet.ticketrush.repos;
 
 import com.uet.ticketrush.models.Event;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -11,7 +12,7 @@ import java.time.LocalDateTime;
 import java.util.UUID;
 
 @Repository
-public interface EventRepository extends JpaRepository<Event, UUID> {
+public interface EventRepository extends JpaRepository<Event, UUID>, JpaSpecificationExecutor<Event> {
     @Modifying
     @Query("""
     UPDATE Event e
