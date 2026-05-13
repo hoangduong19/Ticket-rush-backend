@@ -85,10 +85,18 @@ public class EventController {
     @PutMapping(value = "/admin/events/{eventId}", consumes = { MediaType.MULTIPART_FORM_DATA_VALUE })
     public ResponseEntity<Event> updateEvent(
             @PathVariable UUID eventId,
-            @RequestPart("event") EventRequestDTO request,
+            @RequestPart("event") EventRequestDTO eventRequest,
+            @RequestPart("seating") SeatingPayloadDTO seatingRequest, // Thêm phần này
             @RequestPart(value = "file", required = false) MultipartFile file) {
 
-        Event updatedEvent = eventService.updateEvent(eventId, request, file);
+
+        Event updatedEvent = eventService.updateEvent(eventId, eventRequest, file, seatingRequest);
         return ResponseEntity.ok(updatedEvent);
+    }
+
+    @PatchMapping("/admin/events/{eventId}/publish")
+    public ResponseEntity<String> publishEvent(@PathVariable UUID eventId) {
+        eventService.publishEvent(eventId);
+        return ResponseEntity.ok("Event has been published live.");
     }
 }
