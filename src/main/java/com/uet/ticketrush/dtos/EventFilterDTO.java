@@ -1,6 +1,7 @@
 package com.uet.ticketrush.dtos;
 
 import com.uet.ticketrush.enums.EventCategory;
+import com.uet.ticketrush.enums.EventStatus;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.PositiveOrZero;
 
@@ -14,6 +15,7 @@ public record EventFilterDTO(
         LocalDate dateTo,
         BigDecimal priceMin,
         BigDecimal priceMax,
+        EventStatus status,
 
         @PositiveOrZero
         Integer page,

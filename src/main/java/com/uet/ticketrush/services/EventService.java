@@ -52,6 +52,10 @@ public class EventService {
 
         Specification<Event> spec = (root, query, cb) -> cb.conjunction();
 
+        /*spec = spec.and((root, q, cb) ->
+                cb.equal(root.get("status"), EventStatus.Published)
+        );*/
+
         if (filter.category() != null && !filter.category().isEmpty())
             spec = spec.and((root, q, cb) -> root.get("category").in(filter.category()));
         if (filter.dateFrom() != null)
@@ -62,7 +66,10 @@ public class EventService {
             spec = spec.and((root, q, cb) -> cb.greaterThanOrEqualTo(root.get("price"), filter.priceMin()));
         if (filter.priceMax() != null)
             spec = spec.and((root, q, cb) -> cb.lessThanOrEqualTo(root.get("price"), filter.priceMax()));
-
+        if (filter.status() != null)
+            spec = spec.and((root, q, cb) ->
+                    cb.equal(root.get("status"), filter.status())
+            );
         return eventRepository.findAll(spec, pageable);
     }
 
