@@ -30,7 +30,6 @@ public interface SeatRepository extends JpaRepository<Seat, UUID> {
     @Query("DELETE FROM Seat s WHERE s.event.eventId = :eventId")
     void bulkDeleteByEventId(@Param("eventId") UUID eventId);
 
-    @Query("SELECT MIN(s.price) FROM Seat s WHERE s.event.eventId = :eventId AND s.seatType = :seatType")
-    BigDecimal findMinPriceByEventId(@Param("eventId") UUID eventId, @Param("seatType") String seatType);
-
+    @Query("SELECT MIN(s.price) FROM Seat s WHERE s.event.eventId = :eventId")
+    BigDecimal findAbsoluteMinPriceByEventId(@Param("eventId") UUID eventId);
 }

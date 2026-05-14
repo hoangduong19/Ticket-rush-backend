@@ -128,7 +128,6 @@ public class EventService {
         }
 
         BigDecimal minPrice = payload.getRowConfigs().stream()
-                .filter(r -> "GENERAL".equalsIgnoreCase(r.getSeatType()))
                 .map(RowConfigDTO::getPrice)
                 .min(BigDecimal::compareTo)
                 .orElse(BigDecimal.ZERO);
@@ -244,7 +243,7 @@ public class EventService {
         for (Event event : events) {
             try {
                 // Lấy giá thấp nhất
-                BigDecimal minPrice = seatRepository.findMinPriceByEventId(event.getEventId(), "GENERAL");
+                BigDecimal minPrice = seatRepository.findAbsoluteMinPriceByEventId(event.getEventId());
 
                 // QUAN TRỌNG: Nếu là Draft chưa có ghế, minPrice sẽ là null
                 // Hãy gán giá trị mặc định là 0 thay vì để null gây lỗi
