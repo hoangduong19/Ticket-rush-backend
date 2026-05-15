@@ -4,6 +4,7 @@ import com.uet.ticketrush.exceptions.TicketRushException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.HttpStatus;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
@@ -94,6 +95,11 @@ public class VirtualQueueService {
         String activeKey = "event:" + eventId + ":active";
         String queueKey  = "event:" + eventId + ":queue";
 
+
+        long expiredTime = Instant.now().toEpochMilli() - SESSION_DURATION_MS;
+        // Xóa tất cả user trong activeKey có score (thời gian join) từ 0 đến expiredTime
+        redisTemplate.opsForZSet().removeRangeByScore(activeKey, 0, expiredTime);
+
         Long activeCount = redisTemplate.opsForZSet().zCard(activeKey);
         Long queueSize = redisTemplate.opsForZSet().zCard(queueKey);
 
@@ -127,5 +133,16 @@ public class VirtualQueueService {
         }
 
         return sessionExpiresAt;
+    }
+
+    @Scheduled(fixedRate = 60000)
+    public void scheduledCleanup() {
+        Set<String> activeKeys = redisTemplate.keys("event:*:active");
+        if (activeKeys == null || activeKeys.isEmpty()) return;
+
+        for (String activeKey : activeKeys) {
+            String eventId = activeKey.split(":")[1];
+            processQueue(UUID.fromString(eventId));
+        }
     }
 }
