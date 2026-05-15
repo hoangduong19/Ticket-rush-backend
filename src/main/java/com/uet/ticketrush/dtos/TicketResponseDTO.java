@@ -12,6 +12,7 @@ public record TicketResponseDTO(
         UUID ticketId,
         String eventName,
         String sectionName,
+        String seatType,
         Integer rowNumber,
         Integer seatNumber,
         BigDecimal price,
@@ -24,6 +25,7 @@ public record TicketResponseDTO(
                 .ticketId(t.getTicketId())
                 .eventName(t.getEvent().getTitle())
                 .sectionName(t.getSeat().getSectionName())
+                .seatType(t.getSeat().getSeatType())
                 .rowNumber(t.getSeat().getRowNumber())
                 .seatNumber(t.getSeat().getSeatNumber())
                 .price(t.getPrice())
