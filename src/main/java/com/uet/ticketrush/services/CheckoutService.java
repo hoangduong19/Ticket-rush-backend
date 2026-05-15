@@ -33,6 +33,10 @@ public class CheckoutService {
         SeatHold hold = holdRepository.findById(holdId)
                 .orElseThrow(() -> new EntityNotFoundException("Không tìm thấy thông tin giữ chỗ"));
 
+        if (hold.getStatus() == HoldStatus.Completed) {
+            return;
+        }
+
         if (hold.getStatus() != HoldStatus.Active || hold.getExpiresAt().isBefore(LocalDateTime.now())) {
             throw new TicketRushException("Phiên làm việc không hợp lệ", HttpStatus.GONE);
         }
