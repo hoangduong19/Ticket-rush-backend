@@ -20,7 +20,7 @@ public class SeatService {
         List<Seat> seats = seatRepository.findByEvent_EventId(eventId);
 
         if (seats.isEmpty()) {
-            throw new RuntimeException("Không tìm thấy seat cho event ID: " + eventId);
+            throw new TicketRushException("Không tìm thấy seat cho event ID: " + eventId, HttpStatus.BAD_REQUEST);
         }
 
         return seats;

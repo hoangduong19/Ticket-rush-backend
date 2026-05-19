@@ -23,6 +23,7 @@ public record RegisterRequestDTO(
         @Size(min = 2, message = "Tên hiển thị phải có ít nhất 2 ký tự")
         String displayName,
 
+        @NotNull
         Gender gender
 ) {
 
